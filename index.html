@@ -297,15 +297,11 @@ const liStores = [
 
 // ── 保时捷数据 ──────────────────────────────────────────
 const porStores = [
-    { name:"上海浦西保时捷中心（南京西路店）", address:"黄浦区南京西路288号创兴金融中心首层",              district:"黄浦区",   type:"保时捷中心", lat:31.2355, lng:121.4748, phone:"021-23215911" },
-    { name:"上海浦东保时捷中心",               address:"浦东新区东方路1215-1217号",                       district:"浦东新区", type:"保时捷中心", lat:31.2268, lng:121.5042, phone:"021-61871911" },
-    { name:"上海闵行保时捷中心",               address:"闵行区中春路7358号",                              district:"闵行区",   type:"保时捷中心", lat:31.1482, lng:121.3688, phone:"021-23214911" },
-    { name:"上海徐汇保时捷中心（淮海路展厅）", address:"徐汇区淮海中路999号上海环贸广场LG1-101及L1-101",  district:"徐汇区",   type:"保时捷中心", lat:31.2142, lng:121.4535, phone:"021-23216911" },
-    { name:"上海宝山保时捷中心",               address:"宝山区铁山路35号",                                district:"宝山区",   type:"保时捷中心", lat:31.3598, lng:121.4458, phone:"021-36691911" },
-    { name:"上海嘉定保时捷中心",               address:"嘉定区安驰路8号",                                 district:"嘉定区",   type:"保时捷中心", lat:31.3748, lng:121.2308, phone:"021-60570911" },
-    { name:"上海杨浦保时捷中心",               address:"杨浦区隆昌路588号1楼",                            district:"杨浦区",   type:"保时捷中心", lat:31.2652, lng:121.5232, phone:"021-60806911" },
-    { name:"上海普陀保时捷中心",               address:"普陀区真南路822号",                               district:"普陀区",   type:"保时捷中心", lat:31.2718, lng:121.3925, phone:"021-50478911" },
-    { name:"上海保时捷体验中心（PEC）",         address:"嘉定区伊宁路2588号（上海国际赛车场内）",           district:"嘉定区",   type:"体验中心",   lat:31.3388, lng:121.1660, phone:"021-80316911" },
+    { name:"上海闵行保时捷中心",   address:"闵行区中春路7358号",                district:"闵行区",   type:"保时捷中心", lat:31.1482, lng:121.3688, phone:"021-23214911" },
+    { name:"上海浦东保时捷中心",   address:"浦东新区东方路1215-1217号",         district:"浦东新区", type:"保时捷中心", lat:31.2268, lng:121.5042, phone:"021-61871911" },
+    { name:"上海外高桥保时捷中心", address:"浦东新区俱进路1007号",              district:"浦东新区", type:"保时捷中心", lat:31.3488, lng:121.5828, phone:"021-80172911" },
+    { name:"上海浦西保时捷中心",   address:"黄浦区南京西路288号创兴金融中心首层",district:"黄浦区",   type:"保时捷中心", lat:31.2355, lng:121.4748, phone:"021-23215911" },
+    { name:"上海普陀保时捷中心",   address:"普陀区云岭西路638号",               district:"普陀区",   type:"保时捷中心", lat:31.2672, lng:121.3958, phone:"" },
 ];
 
 // ── 标识品牌 ────────────────────────────────────────────
@@ -362,7 +358,7 @@ allStores.forEach((store, i) => {
         <div class="popup-brand" style="color:${c.title}">${c.label}</div>
         <div class="popup-title" style="color:${c.title}">${store.name}</div>
         <div class="popup-row">📍 ${store.address}</div>
-        ${c.showPhone ? `<div class="popup-row">📞 ${store.phone}</div>` : ''}
+        ${c.showPhone && store.phone ? `<div class="popup-row">📞 ${store.phone}</div>` : ''}
         <span class="popup-badge" style="border:1px solid ${c.border};color:${c.title}">${store.type}</span>
     `, { maxWidth: 300 });
 
@@ -457,7 +453,6 @@ legend.onAdd = function () {
         <div class="legend-brand">
             <div class="legend-brand-name por"><span class="swatch"></span>保时捷 Porsche</div>
             <div class="legend-sub"><span class="legend-sub-dot" style="background:#d5001c"></span>保时捷中心</div>
-            <div class="legend-sub"><span class="legend-sub-dot" style="background:#ff6b6b"></span>体验中心（PEC）</div>
         </div>
     `;
     return div;
