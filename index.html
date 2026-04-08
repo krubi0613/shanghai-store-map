@@ -31,27 +31,16 @@
 
         .brand-logos { display: flex; align-items: center; gap: 7px; }
 
-        .brand-logo {
-            width: 42px; height: 42px;
-            border-radius: 50%;
+        .brand-logo-wrap {
+            width: 44px; height: 44px;
+            background: rgba(255,255,255,0.93);
+            border-radius: 10px;
             display: flex; align-items: center; justify-content: center;
-            font-weight: 900; font-size: 9.5px;
-            letter-spacing: 0.5px; text-align: center; line-height: 1.2;
+            padding: 5px; overflow: hidden; flex-shrink: 0;
         }
-        /* LR → 蓝色 */
-        .brand-logo.lr {
-            background: linear-gradient(135deg, #0d1b3e, #1a3a7c);
-            color: #bfdbfe; border: 2px solid #60a5fa;
-        }
-        /* LI → 金色 */
-        .brand-logo.li {
-            background: linear-gradient(135deg, #c4a44a, #e8d48b, #c4a44a);
-            color: #1a3d2e; border: 2px solid #e8d48b; font-size: 11px;
-        }
-        /* Porsche → 红色 */
-        .brand-logo.por {
-            background: linear-gradient(135deg, #3d0a0e, #8b1a1a);
-            color: #fca5a5; border: 2px solid #d5001c; font-size: 9px;
+        .brand-logo-wrap img {
+            width: 100%; height: 100%;
+            object-fit: contain; display: block;
         }
 
         .brand-sep { color: rgba(255,255,255,0.2); font-size: 18px; font-weight: 100; }
@@ -234,28 +223,37 @@
 <div class="header">
     <div class="header-left">
         <div class="brand-logos">
-            <div class="brand-logo lr">LAND<br>ROVER</div>
-            <div class="brand-sep">|</div>
-            <div class="brand-logo li">理想<br>AUTO</div>
-            <div class="brand-sep">|</div>
-            <div class="brand-logo por">POR<br>SCHE</div>
+            <div class="brand-logo-wrap">
+                <img src="https://logo.clearbit.com/lixiang.com" alt="理想汽车"
+                     onerror="this.parentElement.innerHTML='<span style=\'font-size:11px;font-weight:900;color:#c4a44a\'>理想</span>'">
+            </div>
+            <div class="brand-sep">·</div>
+            <div class="brand-logo-wrap">
+                <img src="https://logo.clearbit.com/landrover.com" alt="Land Rover"
+                     onerror="this.parentElement.innerHTML='<span style=\'font-size:8px;font-weight:900;color:#60a5fa;text-align:center;line-height:1.3\'>LAND<br>ROVER</span>'">
+            </div>
+            <div class="brand-sep">·</div>
+            <div class="brand-logo-wrap">
+                <img src="https://logo.clearbit.com/porsche.com" alt="Porsche"
+                     onerror="this.parentElement.innerHTML='<span style=\'font-size:8px;font-weight:900;color:#ef4444;text-align:center;line-height:1.3\'>POR<br>SCHE</span>'">
+            </div>
         </div>
         <h1>
-            <span class="lr-text">路虎</span> &amp;
             <span class="li-text">理想</span> &amp;
+            <span class="lr-text">路虎</span> &amp;
             <span class="por-text">保时捷</span>
             · 上海门店分布
         </h1>
     </div>
     <div class="header-stats">
-        <div class="stat-block lr">
-            <span class="num" id="lrCount">0</span>
-            <div class="label">路虎门店</div>
-        </div>
-        <div class="stat-sep"></div>
         <div class="stat-block li">
             <span class="num" id="liCount">0</span>
             <div class="label">理想门店</div>
+        </div>
+        <div class="stat-sep"></div>
+        <div class="stat-block lr">
+            <span class="num" id="lrCount">0</span>
+            <div class="label">路虎门店</div>
         </div>
         <div class="stat-sep"></div>
         <div class="stat-block por">
@@ -269,8 +267,8 @@
     <div class="sidebar">
         <div class="filter-tabs">
             <button class="tab-btn active all" data-filter="all">全部 <span class="tab-count" id="tabAll">0</span></button>
-            <button class="tab-btn lr"  data-filter="lr">路虎  <span class="tab-count" id="tabLr">0</span></button>
             <button class="tab-btn li"  data-filter="li">理想  <span class="tab-count" id="tabLi">0</span></button>
+            <button class="tab-btn lr"  data-filter="lr">路虎  <span class="tab-count" id="tabLr">0</span></button>
             <button class="tab-btn por" data-filter="por">保时捷 <span class="tab-count" id="tabPor">0</span></button>
         </div>
         <div class="store-list-wrap">
@@ -390,8 +388,8 @@ allStores.forEach((store, i) => {
 const storeListEl = document.getElementById('storeList');
 
 const allGroups = [
-    { label:'路虎 LAND ROVER', cls:'lr',  items: lrStores  },
     { label:'理想 Li Auto',    cls:'li',  items: liStores  },
+    { label:'路虎 LAND ROVER', cls:'lr',  items: lrStores  },
     { label:'保时捷 Porsche',  cls:'por', items: porStores },
 ];
 
@@ -463,12 +461,12 @@ legend.onAdd = function () {
     div.innerHTML = `
         <div class="legend-title">品牌 / 门店类型</div>
         <div class="legend-brand">
-            <div class="legend-brand-name lr"><span class="swatch"></span>路虎 LAND ROVER</div>
-            <div class="legend-sub"><span class="legend-sub-dot" style="background:#60a5fa"></span>4S 授权经销商</div>
-        </div>
-        <div class="legend-brand">
             <div class="legend-brand-name li"><span class="swatch"></span>理想 Li Auto</div>
             <div class="legend-sub"><span class="legend-sub-dot" style="background:#c4a44a"></span>零售中心</div>
+        </div>
+        <div class="legend-brand">
+            <div class="legend-brand-name lr"><span class="swatch"></span>路虎 LAND ROVER</div>
+            <div class="legend-sub"><span class="legend-sub-dot" style="background:#60a5fa"></span>4S 授权经销商</div>
         </div>
         <div class="legend-brand">
             <div class="legend-brand-name por"><span class="swatch"></span>保时捷 Porsche</div>
