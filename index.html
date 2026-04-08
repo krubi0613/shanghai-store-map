@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>上海路虎 & 理想门店分布地图</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: #1a1a2e;
+            color: #fff;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0d1b2a 0%, #1a2a3e 50%, #0d2b1e 100%);
+            padding: 14px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            position: relative;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-logos {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .brand-logo {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 10px;
+            letter-spacing: 0.5px;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .brand-logo.lr {
+            background: linear-gradient(135deg, #c4a44a, #e8d48b, #c4a44a);
+            color: #1a3d2e;
+            border: 2px solid #e8d48b;
+        }
+
+        .brand-logo.li {
+            background: linear-gradient(135deg, #1a4a8a, #2563eb, #1a4a8a);
+            color: #bfdbfe;
+            border: 2px solid #60a5fa;
+            font-size: 11px;
+        }
+
+        .brand-sep {
+            color: rgba(255,255,255,0.25);
+            font-size: 20px;
+            font-weight: 100;
+        }
+
+        .header h1 {
+            font-size: 19px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: #e8e8e8;
+        }
+
+        .header h1 .lr-text { color: #c4a44a; }
+        .header h1 .li-text { color: #60a5fa; }
+
+        .header-stats {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .stat-block {
+            text-align: center;
+            line-height: 1;
+        }
+
+        .stat-block .num {
+            font-size: 26px;
+            font-weight: 700;
+            display: block;
+        }
+
+        .stat-block .label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.5);
+            margin-top: 2px;
+        }
+
+        .stat-block.lr .num { color: #c4a44a; }
+        .stat-block.li .num { color: #60a5fa; }
+
+        .stat-sep {
+            width: 1px;
+            height: 36px;
+            background: rgba(255,255,255,0.12);
+        }
+
+        /* ── Sidebar ── */
+        .main-container {
+            display: flex;
+            height: calc(100vh - 78px);
+        }
+
+        .sidebar {
+            width: 360px;
+            background: #16213e;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid rgba(255,255,255,0.08);
+            flex-shrink: 0;
+        }
+
+        /* Filter tabs */
+        .filter-tabs {
+            display: flex;
+            padding: 10px 12px;
+            gap: 6px;
+            background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            flex-shrink: 0;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 7px 4px;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 8px;
+            background: transparent;
+            color: rgba(255,255,255,0.45);
+            font-size: 12px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.25s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .tab-btn .tab-count {
+            font-size: 11px;
+            padding: 1px 6px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.08);
+        }
+
+        .tab-btn:hover { border-color: rgba(255,255,255,0.3); color: #fff; }
+
+        .tab-btn.active.all {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.3);
+            color: #fff;
+        }
+
+        .tab-btn.active.lr {
+            background: rgba(196,164,74,0.15);
+            border-color: #c4a44a;
+            color: #c4a44a;
+        }
+
+        .tab-btn.active.li {
+            background: rgba(96,165,250,0.15);
+            border-color: #60a5fa;
+            color: #60a5fa;
+        }
+
+        .store-list-wrap {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .store-list-wrap::-webkit-scrollbar { width: 5px; }
+        .store-list-wrap::-webkit-scrollbar-track { background: #16213e; }
+        .store-list-wrap::-webkit-scrollbar-thumb { background: #2d4a3e; border-radius: 3px; }
+
+        /* Brand section header in list */
+        .brand-section-header {
+            padding: 10px 18px 6px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .brand-section-header.lr { color: #c4a44a; background: rgba(196,164,74,0.05); }
+        .brand-section-header.li { color: #60a5fa; background: rgba(96,165,250,0.05); }
+
+        .brand-section-header .dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .brand-section-header.lr .dot { background: #c4a44a; }
+        .brand-section-header.li .dot { background: #60a5fa; }
+
+        /* Store cards */
+        .store-card {
+            padding: 13px 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            cursor: pointer;
+            transition: all 0.25s;
+            position: relative;
+        }
+
+        .store-card.lr:hover  { background: rgba(196,164,74,0.08); }
+        .store-card.li:hover  { background: rgba(96,165,250,0.08); }
+
+        .store-card.lr.active { background: rgba(196,164,74,0.14); border-left: 3px solid #c4a44a; }
+        .store-card.li.active { background: rgba(96,165,250,0.14); border-left: 3px solid #60a5fa; }
+
+        .store-index {
+            position: absolute;
+            top: 13px;
+            right: 14px;
+            width: 24px; height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .store-card.lr .store-index {
+            background: linear-gradient(135deg, #0a3d2e, #1a5c3a);
+            color: #c4a44a;
+            border: 1px solid rgba(196,164,74,0.3);
+        }
+
+        .store-card.li .store-index {
+            background: linear-gradient(135deg, #0d1b3e, #1a3a7c);
+            color: #60a5fa;
+            border: 1px solid rgba(96,165,250,0.3);
+        }
+
+        .store-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #e8e8e8;
+            padding-right: 32px;
+            line-height: 1.3;
+        }
+
+        .store-address {
+            font-size: 11px;
+            color: rgba(255,255,255,0.4);
+            line-height: 1.5;
+            padding-right: 32px;
+        }
+
+        .store-phone {
+            font-size: 11px;
+            color: rgba(255,255,255,0.3);
+            margin-top: 4px;
+        }
+
+        .store-tag {
+            display: inline-block;
+            margin-top: 6px;
+            padding: 2px 9px;
+            font-size: 11px;
+            border-radius: 9px;
+        }
+
+        .store-card.lr .store-tag {
+            background: rgba(196,164,74,0.12);
+            color: #c4a44a;
+            border: 1px solid rgba(196,164,74,0.25);
+        }
+
+        .store-card.li .store-tag {
+            background: rgba(96,165,250,0.12);
+            color: #60a5fa;
+            border: 1px solid rgba(96,165,250,0.25);
+        }
+
+        /* Map */
+        #map { flex: 1; height: 100%; background: #1a1a2e; }
+
+        /* Leaflet attribution dark theme */
+        .leaflet-control-attribution {
+            background: rgba(13, 20, 40, 0.75) !important;
+            color: rgba(255,255,255,0.3) !important;
+            font-size: 10px !important;
+            border-top-left-radius: 6px;
+        }
+        .leaflet-control-attribution a {
+            color: rgba(255,255,255,0.45) !important;
+        }
+
+        /* Markers */
+        .marker-pin {
+            width: 34px; height: 34px;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 3px 14px rgba(0,0,0,0.5);
+        }
+
+        .marker-pin.lr {
+            background: linear-gradient(135deg, #0a3d2e, #1a5c3a);
+            border: 3px solid #c4a44a;
+        }
+
+        .marker-pin.li {
+            background: linear-gradient(135deg, #0d1b3e, #1a3a7c);
+            border: 3px solid #60a5fa;
+        }
+
+        .marker-number {
+            transform: rotate(45deg);
+            font-weight: 700;
+            font-size: 12px;
+        }
+
+        .marker-pin.lr .marker-number { color: #c4a44a; }
+        .marker-pin.li .marker-number { color: #60a5fa; }
+
+        /* Popups */
+        .leaflet-popup-content-wrapper {
+            background: #16213e !important;
+            color: #fff !important;
+            border-radius: 12px !important;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5) !important;
+        }
+
+        .leaflet-popup-tip { background: #16213e !important; }
+
+        .leaflet-popup-content {
+            margin: 14px 18px !important;
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif !important;
+        }
+
+        .popup-brand {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            opacity: 0.7;
+        }
+
+        .popup-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .popup-row {
+            font-size: 12px;
+            color: rgba(255,255,255,0.55);
+            line-height: 1.6;
+        }
+
+        .popup-type-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            font-size: 11px;
+            border-radius: 10px;
+            margin-top: 6px;
+            background: rgba(255,255,255,0.06);
+        }
+
+        /* Legend */
+        .legend {
+            background: #16213e;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 10px;
+            padding: 12px 15px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+            color: #fff;
+            font-size: 12px;
+            min-width: 160px;
+        }
+
+        .legend-title {
+            font-weight: 700;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 10px;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .legend-brand {
+            margin-bottom: 8px;
+        }
+
+        .legend-brand-name {
+            font-weight: 600;
+            font-size: 12px;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-brand-name .swatch {
+            width: 12px; height: 12px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        .legend-brand-name.lr { color: #c4a44a; }
+        .legend-brand-name.lr .swatch { background: #c4a44a; }
+        .legend-brand-name.li { color: #60a5fa; }
+        .legend-brand-name.li .swatch { background: #60a5fa; }
+
+        .legend-sub {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: rgba(255,255,255,0.45);
+            font-size: 11px;
+            margin-left: 18px;
+            margin-bottom: 2px;
+        }
+
+        .legend-sub-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 768px) {
+            .main-container { flex-direction: column; }
+            .sidebar { width: 100%; height: 220px; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); }
+            #map { height: calc(100vh - 298px); }
+            .header h1 { font-size: 15px; }
+            .header-stats { gap: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-left">
+        <div class="brand-logos">
+            <div class="brand-logo lr">LAND<br>ROVER</div>
+            <div class="brand-sep">|</div>
+            <div class="brand-logo li">理想<br>AUTO</div>
+        </div>
+        <h1><span class="lr-text">路虎</span> &amp; <span class="li-text">理想</span> · 上海门店分布</h1>
+    </div>
+    <div class="header-stats">
+        <div class="stat-block lr">
+            <span class="num" id="lrCount">0</span>
+            <div class="label">路虎门店</div>
+        </div>
+        <div class="stat-sep"></div>
+        <div class="stat-block li">
+            <span class="num" id="liCount">0</span>
+            <div class="label">理想门店</div>
+        </div>
+    </div>
+</div>
+
+<div class="main-container">
+    <div class="sidebar">
+        <div class="filter-tabs">
+            <button class="tab-btn active all" data-filter="all">
+                全部 <span class="tab-count" id="tabAll">0</span>
+            </button>
+            <button class="tab-btn lr" data-filter="lr">
+                路虎 <span class="tab-count" id="tabLr">0</span>
+            </button>
+            <button class="tab-btn li" data-filter="li">
+                理想 <span class="tab-count" id="tabLi">0</span>
+            </button>
+        </div>
+        <div class="store-list-wrap">
+            <div id="storeList"></div>
+        </div>
+    </div>
+    <div id="map"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ── 路虎数据 ──────────────────────────────────────────
+const lrStores = [
+    { name:"上海天华路虎（伟杰捷豹路虎）", address:"闵行区吴中路1750号",          district:"闵行区",   type:"4S店", lat:31.1898, lng:121.3755, phone:"400-805-2900" },
+    { name:"上海中升仕豪捷豹路虎",         address:"普陀区同普路1343弄1号",       district:"普陀区",   type:"4S店", lat:31.2498, lng:121.4098, phone:"400-815-0606" },
+    { name:"百得利捷豹路虎新豪华",         address:"闵行区三鲁公路2800号",        district:"闵行区",   type:"4S店", lat:31.1242, lng:121.3648, phone:"400-805-2300" },
+    { name:"永达捷豹路虎沪南店",           address:"浦东新区御桥路1441号",        district:"浦东新区", type:"4S店", lat:31.1668, lng:121.5288, phone:"400-805-3600" },
+    { name:"永达捷豹路虎龙东店",           address:"浦东新区龙东大道2711号",      district:"浦东新区", type:"4S店", lat:31.2385, lng:121.6085, phone:"400-127-1565" },
+    { name:"永达捷豹路虎康桥店",           address:"浦东新区康桥东路388号",       district:"浦东新区", type:"4S店", lat:31.1588, lng:121.5732, phone:"400-170-2652" },
+];
+
+// ── 理想数据 ──────────────────────────────────────────
+const liStores = [
+    { name:"上海长泰广场零售中心",       address:"浦东新区张江镇长泰广场2座1层",                   district:"浦东新区", type:"零售中心", lat:31.2062, lng:121.5990, phone:"400-990-6969" },
+    { name:"上海世纪汇零售中心",         address:"浦东新区世纪大道1198号世纪汇购物中心1层",         district:"浦东新区", type:"零售中心", lat:31.2335, lng:121.5172, phone:"400-990-6969" },
+    { name:"上海张杨路零售中心",         address:"浦东新区张杨路2761号",                           district:"浦东新区", type:"零售中心", lat:31.2262, lng:121.5855, phone:"400-990-6969" },
+    { name:"上海宝山龙湖天街零售中心",   address:"宝山区顾村镇丹霞山路50弄1号龙湖宝山天街F1",      district:"宝山区",   type:"零售中心", lat:31.3578, lng:121.4252, phone:"400-990-6969" },
+    { name:"上海合生汇零售中心",         address:"杨浦区翔殷路1099号合生汇综合广场一层",           district:"杨浦区",   type:"零售中心", lat:31.3012, lng:121.5152, phone:"400-990-6969" },
+    { name:"上海嘉亭荟零售中心",         address:"安亭镇墨玉南路1033号嘉亭荟",                     district:"嘉定区",   type:"零售中心", lat:31.2878, lng:121.1712, phone:"400-990-6969" },
+    { name:"上海静安大融城零售中心",     address:"静安区沪太路1111弄10号大融城",                   district:"静安区",   type:"零售中心", lat:31.3052, lng:121.4418, phone:"400-990-6969" },
+    { name:"上海凯德虹口龙之梦零售中心", address:"虹口区西江湾路388号凯德龙之梦",                  district:"虹口区",   type:"零售中心", lat:31.2718, lng:121.4858, phone:"400-990-6969" },
+    { name:"上海南翔印象城零售中心",     address:"嘉定区陈翔公路2299号南翔印象城一楼",             district:"嘉定区",   type:"零售中心", lat:31.3228, lng:121.3058, phone:"400-990-6969" },
+    { name:"上海红柳路汽车园零售中心",   address:"普陀区红柳路235号",                              district:"普陀区",   type:"零售中心", lat:31.2382, lng:121.3818, phone:"400-990-6969" },
+    { name:"上海中海环宇城Max零售中心",  address:"普陀区铜川路699号中海环宇城MAX B1层",            district:"普陀区",   type:"零售中心", lat:31.2508, lng:121.3938, phone:"400-990-6969" },
+    { name:"上海中信泰富万达零售中心",   address:"嘉定区马陆镇中信泰富万达1号门",                  district:"嘉定区",   type:"零售中心", lat:31.3312, lng:121.2738, phone:"400-990-6969" },
+    { name:"上海复地活力城零售中心",     address:"浦东新区年家浜路518号万达广场",                  district:"浦东新区", type:"零售中心", lat:31.1705, lng:121.5602, phone:"400-990-6969" },
+    { name:"上海前滩LPLAZA零售中心",     address:"浦东新区东育路345号1层",                         district:"浦东新区", type:"零售中心", lat:31.2008, lng:121.5072, phone:"400-990-6969" },
+    { name:"上海长宁来福士零售中心",     address:"长宁区长宁路1191号长宁来福士广场西区一层",       district:"长宁区",   type:"零售中心", lat:31.2228, lng:121.4072, phone:"400-990-6969" },
+    { name:"上海奉贤天街零售中心",       address:"奉贤区金海公路3800号龙湖奉贤天街",               district:"奉贤区",   type:"零售中心", lat:30.9188, lng:121.4938, phone:"400-990-6969" },
+    { name:"上海南丰城零售中心",         address:"长宁区遵义路100号虹桥南丰城",                    district:"长宁区",   type:"零售中心", lat:31.1958, lng:121.3762, phone:"400-990-6969" },
+    { name:"上海虹桥天地零售中心",       address:"闵行区申长路688号虹桥天地购物中心1楼",           district:"闵行区",   type:"零售中心", lat:31.2212, lng:121.3652, phone:"400-990-6969" },
+    { name:"上海蟠龙天地零售中心",       address:"青浦区鼎誉路91弄8号",                            district:"青浦区",   type:"零售中心", lat:31.1775, lng:121.2882, phone:"400-990-6969" },
+    { name:"上海松江手拉手汽车港零售中心",address:"松江区泗泾镇九干路50号11幢",                   district:"松江区",   type:"零售中心", lat:31.0648, lng:121.2798, phone:"400-990-6969" },
+    { name:"上海熊猫广场零售中心",       address:"青浦区赵巷镇沪青平公路2855弄",                   district:"青浦区",   type:"零售中心", lat:31.1552, lng:121.2198, phone:"400-990-6969" },
+];
+
+// ── 挂上 brand 标识 ────────────────────────────────────
+lrStores.forEach(s => s.brand = 'lr');
+liStores.forEach(s => s.brand = 'li');
+
+const allStores = [...lrStores, ...liStores];
+
+// ── 更新计数 ───────────────────────────────────────────
+document.getElementById('lrCount').textContent = lrStores.length;
+document.getElementById('liCount').textContent = liStores.length;
+document.getElementById('tabAll').textContent = allStores.length;
+document.getElementById('tabLr').textContent  = lrStores.length;
+document.getElementById('tabLi').textContent  = liStores.length;
+
+// ── 地图初始化 ─────────────────────────────────────────
+const map = L.map('map', {
+    center: [31.2304, 121.4737],
+    zoom: 11,
+    zoomControl: false
+});
+
+L.control.zoom({ position: 'topright' }).addTo(map);
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 19
+}).addTo(map);
+
+// ── 自定义图标 ─────────────────────────────────────────
+function createIcon(num, brand) {
+    return L.divIcon({
+        className: '',
+        html: `<div class="marker-pin ${brand}"><span class="marker-number">${num}</span></div>`,
+        iconSize: [34, 34],
+        iconAnchor: [17, 34],
+        popupAnchor: [0, -36]
+    });
+}
+
+// ── 添加标记 ───────────────────────────────────────────
+const markers = [];
+const lrColor = { title:'#c4a44a', badge:'rgba(196,164,74,0.15)', border:'rgba(196,164,74,0.5)' };
+const liColor = { title:'#60a5fa', badge:'rgba(96,165,250,0.15)',  border:'rgba(96,165,250,0.5)' };
+
+allStores.forEach((store, i) => {
+    const c = store.brand === 'lr' ? lrColor : liColor;
+    const num = store.brand === 'lr'
+        ? lrStores.indexOf(store) + 1
+        : liStores.indexOf(store) + 1;
+
+    const marker = L.marker([store.lat, store.lng], {
+        icon: createIcon(num, store.brand)
+    }).addTo(map);
+
+    marker.bindPopup(`
+        <div class="popup-brand" style="color:${c.title}">${store.brand === 'lr' ? 'LAND ROVER · 路虎' : '理想汽车 · Li Auto'}</div>
+        <div class="popup-title" style="color:${c.title}">${store.name}</div>
+        <div class="popup-row">📍 ${store.address}</div>
+        ${store.brand === 'lr' ? `<div class="popup-row">📞 ${store.phone}</div>` : ''}
+        <span class="popup-type-badge" style="border:1px solid ${c.border};color:${c.title}">${store.type}</span>
+    `, { maxWidth: 290 });
+
+    markers.push(marker);
+});
+
+// ── 侧边栏列表 ─────────────────────────────────────────
+const storeListEl = document.getElementById('storeList');
+
+function buildList(filter) {
+    storeListEl.innerHTML = '';
+
+    const groups = filter === 'all'
+        ? [ { label:'路虎 LAND ROVER', cls:'lr', items: lrStores },
+            { label:'理想 Li Auto',     cls:'li', items: liStores } ]
+        : filter === 'lr'
+            ? [ { label:'路虎 LAND ROVER', cls:'lr', items: lrStores } ]
+            : [ { label:'理想 Li Auto',     cls:'li', items: liStores } ];
+
+    groups.forEach(group => {
+        const header = document.createElement('div');
+        header.className = `brand-section-header ${group.cls}`;
+        header.innerHTML = `<span class="dot"></span>${group.label} (${group.items.length})`;
+        storeListEl.appendChild(header);
+
+        group.items.forEach((store, idx) => {
+            const globalIdx = allStores.indexOf(store);
+            const card = document.createElement('div');
+            card.className = `store-card ${group.cls}`;
+            card.dataset.index = globalIdx;
+
+            card.innerHTML = `
+                <div class="store-index">${idx + 1}</div>
+                <div class="store-name">${store.name}</div>
+                <div class="store-address">📍 ${store.address}</div>
+                ${store.brand === 'lr' ? `<div class="store-phone">📞 ${store.phone}</div>` : ''}
+                <span class="store-tag">${store.type}</span>
+            `;
+
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.store-card').forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                map.flyTo([store.lat, store.lng], 14, { duration: 0.9 });
+                setTimeout(() => markers[globalIdx].openPopup(), 900);
+            });
+
+            storeListEl.appendChild(card);
+        });
+    });
+}
+
+buildList('all');
+
+// ── 筛选 tab ───────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const filter = btn.dataset.filter;
+        buildList(filter);
+
+        // 显示/隐藏标记
+        allStores.forEach((store, i) => {
+            const show = filter === 'all' || store.brand === filter;
+            if (show) {
+                if (!map.hasLayer(markers[i])) markers[i].addTo(map);
+            } else {
+                if (map.hasLayer(markers[i])) map.removeLayer(markers[i]);
+            }
+        });
+
+        // 自适应视野
+        const visible = allStores
+            .map((s, i) => ({ s, i }))
+            .filter(({ s }) => filter === 'all' || s.brand === filter)
+            .map(({ i }) => markers[i]);
+        if (visible.length) {
+            map.fitBounds(L.featureGroup(visible).getBounds().pad(0.1));
+        }
+    });
+});
+
+// ── 图例 ───────────────────────────────────────────────
+const legend = L.control({ position: 'bottomright' });
+legend.onAdd = function () {
+    const div = L.DomUtil.create('div', 'legend');
+    div.innerHTML = `
+        <div class="legend-title">品牌 / 门店类型</div>
+        <div class="legend-brand">
+            <div class="legend-brand-name lr"><span class="swatch"></span>路虎 LAND ROVER</div>
+            <div class="legend-sub"><span class="legend-sub-dot" style="background:#c4a44a"></span>4S 授权经销商</div>
+        </div>
+        <div class="legend-brand">
+            <div class="legend-brand-name li"><span class="swatch"></span>理想 Li Auto</div>
+            <div class="legend-sub"><span class="legend-sub-dot" style="background:#60a5fa"></span>零售中心</div>
+        </div>
+    `;
+    return div;
+};
+legend.addTo(map);
+
+// ── 初始视野 ───────────────────────────────────────────
+const allGroup = L.featureGroup(markers);
+map.fitBounds(allGroup.getBounds().pad(0.1));
+</script>
+</body>
+</html>
